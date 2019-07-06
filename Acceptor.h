@@ -1,5 +1,9 @@
+#ifndef ACCEPTOR_H
+#define ACCEPTOR_H
+
 #include "Socket.h"
 #include "Channel.h"
+#include "InetAddress.h"
 
 #include <functional>
 #include <memory>
@@ -33,3 +37,5 @@ class Acceptor
 };
 
 }
+
+#endif

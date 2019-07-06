@@ -1,6 +1,6 @@
 #include <functional>
 #include <memory>
-#include <vector>
+#include <set>
 
 #include "EventLoop.h"
 #include "InetAddress.h"
@@ -18,11 +18,13 @@ class TcpServer
 {
 	public:
 		typedef std::function<void()> OnConnCallBack;
-		typedef std::function<void(TcpConnection *)> OnMessageCallBack;	
+		typedef std::function<void(TcpConnection::TcpConnPtr)> OnMessageCallBack;	
 
 		TcpServer(EventLoop *loop, const net::InetAddress &addr);
 		
 		void run();		
+		void setThreadNum(int threadNum);
+
 		void setConnectionCallBack(OnConnCallBack callback) { OnConnectionCallBack_ = callback; }
 		void setMessageCallBack(OnMessageCallBack callback) { OnMessageCallBack_ = callback; }
 		//void setCloseCallBack(CallBack callback) { OnCloseCallBack_ = callback; }
@@ -30,10 +32,9 @@ class TcpServer
 	private:
 		void HandleNewConn(Socket connSock);
 		void HandleMessage();
-		void HandleClose();
+		void HandleClose(std::shared_ptr<TcpConnection> conn);
 
-		typedef std::vector<std::unique_ptr<TcpConnection>> TcpConnList;
-
+		typedef std::set<std::shared_ptr<TcpConnection>> TcpConnList;
 		EventLoop *loop_;
 		InetAddress addr_;	
 		Acceptor acceptor_;
@@ -44,7 +45,6 @@ class TcpServer
 
 		OnConnCallBack OnConnectionCallBack_;
 		OnMessageCallBack OnMessageCallBack_;
-		//CallBack OnCloseCallBack_;
 
 		TcpConnList conns_;	
 };

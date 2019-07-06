@@ -24,13 +24,10 @@ class Epoll
 	  	 events_(kInitEventListSize)
 		{}
 
-		void addChannel(Channel *channel) { 
-			channels_[channel->getFd()] = channel;	
-			update(EPOLL_CTL_ADD, channel);
-		}
+		void addChannel(Channel *channel); 
+		void modifyChannel(Channel *channel);
+		void deleteChannel(Channel *channel);
 
-		void updateChannel(Channel *channel) { update(EPOLL_CTL_MOD, channel); }
-		
 		//close the epoll fd
 		~Epoll();		
 		
@@ -39,14 +36,12 @@ class Epoll
 		typedef std::unordered_map<int, Channel *> ChannelMap;
 		typedef std::vector<struct epoll_event> EventList;
 		typedef std::vector<Channel *> ChannelList;
-
-		void update(int operation, Channel *channel);
 		
 		//close the fd when destroy
 		int epollfd_;
 		EventLoop *loop_;
 		//fd-channel map
-		ChannelMap channels_;
+		ChannelMap channelMap_;
 
 		EventList events_;
 };

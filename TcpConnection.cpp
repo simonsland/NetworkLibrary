@@ -13,11 +13,24 @@ connChannel_(loop, connSock_.fd())
 	loop->addChannel(&connChannel_);	
 }
 
-void TcpConnection::HandleRead() 
+TcpConnection::~TcpConnection()
 {
-	connSock_.read(&inputBuffer_);
+	//优雅关闭
+	while(outputBuffer_.getSize() > 0) connSock_.write(&outputBuffer_);	
+}
+
+void TcpConnection::HandleRead() 
+{	
+	int len = connSock_.read(&inputBuffer_);
 	if(inputBuffer_.getSize() > 0) 
 	{
-		messageCallback_(this);
+		if(messageCallback_) messageCallback_(shared_from_this());
+	}
+	
+	if(len == -1) //客户端关闭连接 
+	{
+		if(closeCallback_) closeCallback_(shared_from_this());
 	}
 }
+
+

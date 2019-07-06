@@ -15,7 +15,8 @@ class EventLoop
 		~EventLoop() { stop_ = true; }
 
 		void addChannel(Channel *channel);
-		void updateChannel(Channel *channel);
+		void modifyChannel(Channel *channel);
+
 		void loop();
 	private:
 		EventLoop(const EventLoop &) = delete;

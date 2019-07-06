@@ -21,7 +21,7 @@ class IOLoopThreadPool
 		
 		EventLoop *getNextLoop();
 
-		void setThreadNums(int thread_cnt) { threadNums_ = thread_cnt; }
+		void setThreadNums(int thread_cnt);
 
 		~IOLoopThreadPool();
 	private:

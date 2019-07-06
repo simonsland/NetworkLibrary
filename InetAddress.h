@@ -13,10 +13,11 @@ class InetAddress
 {
 	public:
 	//only ipv4 is supported
+	InetAddress(const std::string &port);
 	InetAddress(const std::string &ip, const std::string &port);
 
 	int getAddrSize() const { return sizeof(addr_); }
-	const struct sockaddr* getInetSocketAddress() const { return sockaddr_cast(&addr_); }
+	const struct sockaddr* getInetSocketAddress() const { return reinterpret_cast<const struct sockaddr*>(&addr_); }
 	private:
 		struct sockaddr_in addr_;
 };

@@ -3,22 +3,45 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <errno.h>
+#include <string.h>
 
 using namespace net;
 
-void Epoll::update(int operation, Channel *channel)
-{
+void Epoll::addChannel(Channel *channel) { 
+	channelMap_[channel->getFd()] = channel;	
+	
 	struct epoll_event ev;
 	memset(&ev, 0, sizeof(ev));	
-	
+
 	int fd = channel->getFd();
 	ev.events = channel->getEvents();
 	ev.data.fd = fd; 	
 
-	if(epoll_ctl(epollfd_, operation, fd, &ev) < 0) 
-	{
-		std::cout << "epoll_ctl operation fd = , error" << fd << std::endl;
-	}
+	if(epoll_ctl(epollfd_, EPOLL_CTL_ADD, fd, &ev) < 0) 
+	{		
+		std::cout << "file :" << __FILE__ << " at line : "<< __LINE__<< " in function "<< __FUNCTION__ << "() error " << errno << " : " << strerror(errno) << std::endl; 
+	}	
+}
+
+void Epoll::modifyChannel(Channel *channel)
+{
+	struct epoll_event ev;
+	memset(&ev, 0, sizeof(ev));	
+
+	int fd = channel->getFd();
+	ev.events = channel->getEvents();
+	ev.data.fd = fd; 	
+
+	if(epoll_ctl(epollfd_, EPOLL_CTL_MOD, fd, &ev) < 0) 
+	{		
+		std::cout << "file :" << __FILE__ << " at line : "<< __LINE__<< " in function "<< __FUNCTION__ << "() error " << errno << " : " << strerror(errno) << std::endl; 
+	}	
+}
+
+void Epoll::deleteChannel(Channel *channel)
+{
+
 }
 
 Epoll::ChannelList Epoll::poll()
@@ -27,12 +50,11 @@ Epoll::ChannelList Epoll::poll()
 	ChannelList activated;
 	for(int i = 0; i < event_num; i++) 
 	{
-		Channel *channel = channels_[events_[i].data.fd];
+		Channel *channel = channelMap_[events_[i].data.fd];
 		channel->setRevents(events_[i].events);
 		activated.push_back(channel);
+		
 
-		//在下一个循环持续监听事件
-		update(EPOLL_CTL_MOD, channel);	
 	}
 	return activated;
 }

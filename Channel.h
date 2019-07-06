@@ -26,18 +26,19 @@ class Channel
 		
 		void setFd(int fd) { fd_ = fd; };
 		void setRevents(EpollEvent revents) { revents_ = revents; }
+		void resetRevents() { revents_ &= ~revents_; }
 		int getFd() { return fd_; }
 		EpollEvent getEvents() { return events_; }
 
-		void enableRead() { events_ |= (EPOLLIN | EPOLLPRI | EPOLLET); update(); }
-		void enableWrite() { events_ |= (EPOLLOUT | EPOLLET); update(); }
-		void disableRead() { events_ &= (~EPOLLIN | EPOLLPRI); update(); }
-		void disableWrite() { events_ &= ~EPOLLOUT; update(); }	
-		void disableAll() { events_ &= ~events_; update(); }		
+		void enableRead() { events_ |= (EPOLLIN | EPOLLPRI | EPOLLET); }
+		void enableWrite() { events_ |= (EPOLLOUT | EPOLLET); }
+		void disableRead() { events_ &= (~EPOLLIN | EPOLLPRI); }
+		void disableWrite() { events_ &= ~EPOLLOUT; }	
+		void disableAll() { events_ &= ~events_; }		
 		
 		void handleEvent();
 	private:
-		void update();
+		//void update();
 
 		EventLoop *loop_;
 		int fd_;

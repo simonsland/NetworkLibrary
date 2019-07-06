@@ -14,7 +14,7 @@ stop_(true)
 	for(int i = 0; i < thread_cnt; i++) 
 	{
 		std::shared_ptr<EventLoop> ioLoop = std::make_shared<EventLoop>();
-		loops_.emplace_back(ioLoop);		
+		loops_.push_back(ioLoop);		
 	}
 }
 
@@ -26,6 +26,16 @@ IOLoopThreadPool::~IOLoopThreadPool()
 	{
 		t.join();
 	}
+}
+
+void IOLoopThreadPool::setThreadNums(int thread_cnt)
+{
+	for(int i = threadNums_; i < thread_cnt; i++)
+	{
+		std::shared_ptr<EventLoop> ioLoop = std::make_shared<EventLoop>();
+		loops_.push_back(ioLoop);
+	}
+	threadNums_ = thread_cnt;
 }
 
 void IOLoopThreadPool::start()
@@ -48,7 +58,7 @@ void IOLoopThreadPool::stop()
 EventLoop *IOLoopThreadPool::getNextLoop()
 {
 	if(threadNums_ == 0) return baseLoop_;
-	idx_ = (idx_ + 1) % threadNums_;
 	EventLoop *ioLoop = loops_[idx_].get();
+	idx_ = (idx_ + 1) % threadNums_;
 	return ioLoop; 
 }

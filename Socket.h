@@ -24,7 +24,7 @@ class Socket : private base::Uncopyable
 		Socket(Socket &&) noexcept;
 		Socket & operator=(Socket &&) noexcept;		
 
-		~Socket() { if(sockfd_ >= 0) close(sockfd_); }		
+		~Socket() { if(sockfd_ >= 0) ::close(sockfd_); }		
 
 		int fd() { return sockfd_; }
 
@@ -32,7 +32,7 @@ class Socket : private base::Uncopyable
 		void listen();
 		int accept();
 
-		void read(Buffer *);
+		int read(Buffer *);
 		void write(Buffer *);
 
 	private:

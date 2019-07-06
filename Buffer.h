@@ -9,14 +9,17 @@ namespace net
 class Buffer
 {
 	public:
+		typedef std::vector<char> BufferData;
+
 		Buffer();
+		BufferData getBufferData();
 		void remove(int);
 		void append(char *, int);					
 		int getSize() { return size_; }
 		char *buffer() { return &buffer_[head_]; }
 	private:
 		int capacity_;
-		std::vector<char> buffer_;
+		BufferData buffer_;
 		int size_;
 		int head_;
 		int tail_;

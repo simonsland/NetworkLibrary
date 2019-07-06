@@ -14,6 +14,13 @@ tail_(0)
 
 }
 
+Buffer::BufferData Buffer::getBufferData() 
+{
+	BufferData data(buffer_.begin() + head_, buffer_.begin() + tail_);
+        remove(size_);
+	return data;	
+}
+
 //每次读走一部分数据后，将数据整体前移
 void Buffer::remove(int n)
 {

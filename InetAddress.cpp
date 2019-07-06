@@ -5,6 +5,13 @@
 
 using namespace net;
 
+InetAddress::InetAddress(const std::string &port)
+{
+	addr_.sin_addr.s_addr = htonl(INADDR_ANY);
+	addr_.sin_port = htons(static_cast<short>(atoi(port.c_str())));
+	addr_.sin_family = AF_INET;	
+}
+
 InetAddress::InetAddress(const std::string &ip, const std::string &port)
 {
 	struct in_addr ip_addr;

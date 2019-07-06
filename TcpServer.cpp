@@ -25,8 +25,16 @@ start_(false)
 void TcpServer::run()
 {
 	start_ = true;
-	std::cout << "server run" << std::endl;	
+	pool_.start();
+	std::cout << "server run..." << std::endl;	
 	//loop_->loop();
+}
+
+//设置IO线程个数，分离accpet和conntion处理，提高并发
+void TcpServer::setThreadNum(int threadNum)
+{
+	if(threadNum < 0) threadNum = 0;
+	pool_.setThreadNums(threadNum);	
 }
 
 //通过该connSock生成一个TcpConnection对象，加入TcpConnList中
@@ -35,9 +43,18 @@ void TcpServer::run()
 void TcpServer::HandleNewConn(Socket connSock)
 {
 	EventLoop *ioLoop = pool_.getNextLoop();
-	std::unique_ptr<TcpConnection> conn(new TcpConnection(ioLoop, std::move(connSock))); 	
+	
+	std::shared_ptr<TcpConnection> conn = std::make_shared<TcpConnection>(ioLoop, std::move(connSock));	
 	conn->setMessageCallBack(OnMessageCallBack_);
-	conns_.emplace_back(std::move(conn));	
+	conn->setCloseCallBack(std::bind(&TcpServer::HandleClose, this, std::placeholders::_1));
+	conns_.insert(conn);	
+	std::cout << "online user count : " << conns_.size() << std::endl;
+}
+
+void TcpServer::HandleClose(std::shared_ptr<TcpConnection> conn)
+{
+	std::cout << "conn close, online user : " << conns_.size() << std::endl;
+	conns_.erase(conn);
 }
 
 

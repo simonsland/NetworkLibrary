@@ -1,13 +1,15 @@
 #include "Acceptor.h"
 #include "EventLoop.h"
 #include "SocketUtil.h"
+
+#include <fcntl.h>
 #include <memory>
 
-using namespace net;
+using namespace net; 
 
 Acceptor::Acceptor(EventLoop *loop, const InetAddress &addr)
 :loop_(loop),
-listenSock_(creatNonBlockingSock()),
+listenSock_(socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0)),
 listenChannel_(loop, listenSock_.fd()),
 listening(false)
 {
@@ -31,6 +33,17 @@ void Acceptor::HandleNewConn()
 	int connfd = listenSock_.accept();
 	if(connfd > 0)
 	{
-		newConnCallback_(Socket(connfd));		
+		std::cout << __FILE__ << " " << __LINE__ << " " << __FUNCTION__ << std::endl;
+		//将connfd设置为非阻塞状态
+		if(fcntl(connfd, F_SETFL, O_NONBLOCK | fcntl(connfd, F_GETFL, 0)) < 0)
+		{
+			std::cout << __FILE__ << " " << __LINE__ << " " << " fcntl error" << std::endl;
+		} 
+		else 
+		{
+			//std::cout << __FILE__ << " " << __LINE__ << " " << " new connection callback... " << std::endl;
+			newConnCallback_(Socket(connfd));		
+		}
 	}	
 }
+
