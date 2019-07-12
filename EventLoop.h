@@ -2,6 +2,8 @@
 #define EVENT_LOOP_H
 
 #include "Epoll.h"
+
+#include <thread>
 #include <memory>
 #include <vector>
 
@@ -12,20 +14,20 @@ class EventLoop
 {
 	public:
 		EventLoop();
-		~EventLoop() { stop_ = true; }
+		~EventLoop() { }
 
-		void addChannel(Channel *channel);
-		void modifyChannel(Channel *channel);
+		void addChannel(Channel::ChannelWPtr);
+		void modifyChannel(Channel::ChannelWPtr);
+		void removeChannel(Channel::ChannelWPtr);
 
 		void loop();
 	private:
 		EventLoop(const EventLoop &) = delete;
 		EventLoop& operator=(const EventLoop &) = delete;
-		
-		typedef std::vector<Channel *> ChannelList;	
 
-		bool stop_;		
+		bool stop_;			
 		std::unique_ptr<Epoll> poller_;
+		std::thread::id threadId_;
 };
 
 }

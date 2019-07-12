@@ -13,6 +13,7 @@ class Buffer
 
 		Buffer();
 		BufferData getBufferData();
+		void appendBufferData(BufferData data);
 		void remove(int);
 		void append(char *, int);					
 		int getSize() { return size_; }

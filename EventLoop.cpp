@@ -4,38 +4,44 @@
 using namespace net;
 
 EventLoop::EventLoop()
-:stop_(false),
+:stop_(true),
 poller_(new Epoll(this))
 {
 
 }
 
-void EventLoop::addChannel(Channel *channel)
+void EventLoop::addChannel(Channel::ChannelWPtr channel)
 {
 	poller_->addChannel(channel);
 }
 
-void EventLoop::modifyChannel(Channel *channel)
+void EventLoop::modifyChannel(Channel::ChannelWPtr channel)
 {
 	poller_->modifyChannel(channel);
 }
 
+void EventLoop::removeChannel(Channel::ChannelWPtr channel)
+{
+	poller_->removeChannel(channel);
+}	
+
 void EventLoop::loop()
 {
 	//debug
-	std::cout << "start loop..." << std::endl;
+	stop_ = false;
+	threadId_ = std::this_thread::get_id();
+	std::cout << "loop start at thread : " << threadId_ <<std::endl;	
 	while(!stop_) 
 	{
-		std::cout << __FILE__ << " " << __LINE__ << " loop..." << std::endl;
-		ChannelList activeated = poller_->poll();
-		std::cout << "new events coming..." << std::endl;
-		for(auto channel : activeated)
+		Channel::ChannelList activeated = poller_->poll();
+		std::cout << "events comes at " << "thread : "<< threadId_ << std::endl;
+		for(auto channel_w : activeated)
 		{
-			channel->handleEvent();
-
-			//重新激活channel		
-			//channel->resetRevents();				
-			//this->modifyChannel(channel);
+			Channel::ChannelPtr channel(channel_w.lock());
+			if(channel)
+			{	
+				channel->handleEvent();
+			}
 		}
 	}		
 }

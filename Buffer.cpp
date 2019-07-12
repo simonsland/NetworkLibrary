@@ -21,6 +21,11 @@ Buffer::BufferData Buffer::getBufferData()
 	return data;	
 }
 
+void Buffer::appendBufferData(BufferData data)
+{
+	append(reinterpret_cast<char *>(&(*data.begin())), data.size());		
+}
+
 //每次读走一部分数据后，将数据整体前移
 void Buffer::remove(int n)
 {

@@ -18,7 +18,7 @@ class TcpServer
 {
 	public:
 		typedef std::function<void()> OnConnCallBack;
-		typedef std::function<void(TcpConnection::TcpConnPtr)> OnMessageCallBack;	
+		typedef std::function<void(TcpConnection::TcpConnPtr &)> OnMessageCallBack;	
 
 		TcpServer(EventLoop *loop, const net::InetAddress &addr);
 		
@@ -32,7 +32,7 @@ class TcpServer
 	private:
 		void HandleNewConn(Socket connSock);
 		void HandleMessage();
-		void HandleClose(std::shared_ptr<TcpConnection> conn);
+		void HandleClose(std::shared_ptr<TcpConnection> &conn);
 
 		typedef std::set<std::shared_ptr<TcpConnection>> TcpConnList;
 		EventLoop *loop_;

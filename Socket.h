@@ -2,7 +2,9 @@
 #define SOCKET_H
 
 #include "base/Uncopyable.h"
+
 #include <unistd.h>
+#include <iostream>
 
 namespace net
 {
@@ -24,7 +26,11 @@ class Socket : private base::Uncopyable
 		Socket(Socket &&) noexcept;
 		Socket & operator=(Socket &&) noexcept;		
 
-		~Socket() { if(sockfd_ >= 0) ::close(sockfd_); }		
+		~Socket() 
+		{ 
+			if(sockfd_ >= 0) ::close(sockfd_); 
+			//std::cout << "socket : " << sockfd_ << " destroy" << std::endl; 
+		}		
 
 		int fd() { return sockfd_; }
 
@@ -33,7 +39,7 @@ class Socket : private base::Uncopyable
 		int accept();
 
 		int read(Buffer *);
-		void write(Buffer *);
+		int write(Buffer *);
 
 	private:
 		int sockfd_;

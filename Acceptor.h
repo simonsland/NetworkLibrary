@@ -29,7 +29,7 @@ class Acceptor
 
 		EventLoop *loop_;
 		Socket listenSock_;
-		Channel listenChannel_;		
+		Channel::ChannelPtr listenChannel_;		
 
 		bool listening;
 

@@ -4,8 +4,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <functional>
-
 #include <iostream>
+#include <signal.h>
 
 using namespace net;
 
@@ -18,6 +18,8 @@ acceptor_(loop, addr),
 pool_(loop, kDefaultThreadCnt),
 start_(false)
 {
+	//忽略PIPE信号
+	::signal(SIGPIPE, SIG_IGN);
 	acceptor_.setNewConnCallBack(std::bind(&TcpServer::HandleNewConn, this, std::placeholders::_1));
 }
 
@@ -25,9 +27,8 @@ start_(false)
 void TcpServer::run()
 {
 	start_ = true;
-	pool_.start();
-	std::cout << "server run..." << std::endl;	
 	//loop_->loop();
+	pool_.start();
 }
 
 //设置IO线程个数，分离accpet和conntion处理，提高并发
@@ -47,11 +48,13 @@ void TcpServer::HandleNewConn(Socket connSock)
 	std::shared_ptr<TcpConnection> conn = std::make_shared<TcpConnection>(ioLoop, std::move(connSock));	
 	conn->setMessageCallBack(OnMessageCallBack_);
 	conn->setCloseCallBack(std::bind(&TcpServer::HandleClose, this, std::placeholders::_1));
+	conn->runInLoop();
+	
 	conns_.insert(conn);	
-	std::cout << "online user count : " << conns_.size() << std::endl;
+	std::cout << "online user : " << conns_.size() << std::endl;
 }
 
-void TcpServer::HandleClose(std::shared_ptr<TcpConnection> conn)
+void TcpServer::HandleClose(std::shared_ptr<TcpConnection> &conn)
 {
 	std::cout << "conn close, online user : " << conns_.size() << std::endl;
 	conns_.erase(conn);

@@ -5,6 +5,7 @@
 #include <vector>
 #include <string.h>
 #include <unordered_map>
+#include <memory>
 
 #include "Channel.h"
 
@@ -13,29 +14,28 @@ namespace net
 
 class EventLoop;
 
-const int kInitEventListSize = 5;
+const int kInitEventListSize = 1000;
 
 class Epoll 
 {
-	public:	
-		Epoll(EventLoop *loop)
+	public:		
+	       	Epoll(EventLoop *loop)
 		:epollfd_(epoll_create1(EPOLL_CLOEXEC)),
 	         loop_(loop),
 	  	 events_(kInitEventListSize)
 		{}
 
-		void addChannel(Channel *channel); 
-		void modifyChannel(Channel *channel);
-		void deleteChannel(Channel *channel);
+		void addChannel(Channel::ChannelWPtr &); 
+		void modifyChannel(Channel::ChannelWPtr &);
+		void removeChannel(Channel::ChannelWPtr &);
 
 		//close the epoll fd
 		~Epoll();		
 		
-		std::vector<Channel *> poll();
+		Channel::ChannelList poll();
 	private:
-		typedef std::unordered_map<int, Channel *> ChannelMap;
+		typedef std::unordered_map<int, Channel::ChannelWPtr> ChannelMap;
 		typedef std::vector<struct epoll_event> EventList;
-		typedef std::vector<Channel *> ChannelList;
 		
 		//close the fd when destroy
 		int epollfd_;

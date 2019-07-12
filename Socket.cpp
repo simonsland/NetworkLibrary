@@ -9,7 +9,7 @@
 #include <string.h>
 using namespace net;
 
-const int kStackBufferSize = 65536;
+const int kStackBufferSize = 4096;
 
 Socket::Socket(Socket &&sock) noexcept
 : sockfd_(sock.sockfd_)
@@ -47,7 +47,7 @@ int Socket::accept()
 {
 	std::cout << __FILE__ << " at line: " << __LINE__ << " in functio: " << __FUNCTION__ << std::endl;
 	struct sockaddr_in clientAddr;
-	socklen_t clilen;
+	socklen_t clilen = sizeof(struct sockaddr);
 	int connfd = ::accept(sockfd_, reinterpret_cast<struct sockaddr*>(&clientAddr), &clilen);
 	if(connfd < 0)
 	{
@@ -55,6 +55,7 @@ int Socket::accept()
 		//accept返回-1的情况主要包括慢系统调用被中断,此时errno等于EINTR
 		//客户端在accept之前关闭，发送了一个RST至服务端，此时errno等于ECONNABORTED，软件引起的连接终止
 		//可以根据errno来确定是否需要重启accept及相应的处理流程		
+		//开启的文件描述符过多时，也会导致accept失败
 	}
 	return connfd;		
 }
@@ -69,8 +70,6 @@ int Socket::read(Buffer *inputBuffer)
 		int len = recv(sockfd_, buffer, kStackBufferSize, 0); 
 		if(len < 0) 
 		{
-			std::cout << "read " << read_t << " bytes from socket" << std::endl;
-
 			if(errno == EAGAIN) //缓存区数据读取完成
 			{
 				break;				
@@ -79,25 +78,27 @@ int Socket::read(Buffer *inputBuffer)
 			{
 				continue;
 			}
-			else break;  //其他错误如ECONNRST网络连接出错 	
+			else   //其他错误如ECONNRST网络连接出错、EPIPE错误等等
+				return -1;
 		}
-		else if(len == 0) //对端数据发送完毕并关闭连接
+		else if(len == 0) //对端数据发送完毕
 		{
-			return -1; 
+			return 0; 
 		}
 		//将读取到的数据放入inputBuffer,并循环读取缓冲区(ET模式)
 		inputBuffer->append(buffer,len);
 		read_t += len;
-		std::cout << "read " << read_t << " bytes from socket" << std::endl;
 	}
+	std::cout << "read " << read_t << " bytes from socket" << std::endl;
 	return read_t;
 }
 
 //ET模式下的非阻塞写
-void Socket::write(Buffer *outputBuffer)
+int Socket::write(Buffer *outputBuffer)
 {
 	int remain = outputBuffer->getSize();
 	char *buffer = outputBuffer->buffer();	
+	std::cout << "outputBuffer remain " << remain << " bytes to write" << std::endl;
 	while(remain > 0) 
 	{
 		int len = send(sockfd_, buffer, remain, 0);
@@ -111,11 +112,18 @@ void Socket::write(Buffer *outputBuffer)
 			{
 				continue;
 			}
+			else if(errno == EPIPE)
+			{
+				return -1;
+			}
 			else break; //其他错误如EPIPE，对方已经关闭连接
 		}
 		buffer += len;
 		remain -= len;
 	}
-	outputBuffer->remove(outputBuffer->getSize() - remain);
+	int written_t = outputBuffer->getSize() - remain;
+	outputBuffer->remove(written_t);	
+	std::cout << "write " << written_t << " bytes to socket" << std::endl;	
+	return written_t;	
 }
 

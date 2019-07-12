@@ -10,14 +10,14 @@ using namespace net;
 Acceptor::Acceptor(EventLoop *loop, const InetAddress &addr)
 :loop_(loop),
 listenSock_(socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0)),
-listenChannel_(loop, listenSock_.fd()),
+listenChannel_(std::make_shared<Channel>(loop, listenSock_.fd())),
 listening(false)
 {
 	listenSock_.bindAddress(addr);	
 	listenSock_.listen();
-	listenChannel_.enableRead();
-	listenChannel_.setReadCallBack(std::bind(&Acceptor::HandleNewConn, this));
-	loop->addChannel(&listenChannel_);
+	listenChannel_->enableRead();
+	listenChannel_->setReadCallBack(std::bind(&Acceptor::HandleNewConn, this));
+	loop->addChannel(listenChannel_);
 }
 
 //void Acceptor::listen()
